@@ -1,34 +1,56 @@
-/*
- * Blink
- * Turns on an LED on for one second,
- * then off for one second, repeatedly.
- */
+#define OPEN false
+#define CLOSE true
+#define OPEN_STR "/open"
+#define CLOSE_STR "/close"
 
-#include "Arduino.h"
+#include <Arduino.h>
+
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 #include "Constants.h"
 
-const String ssid = "";
+HTTPClient http;
+WiFiClient client;
 
+
+
+bool oldState = OPEN;
+const string ssid = Constants::getSSID();
+const string password = Constants::getPassword();
 void setup()
 {
-  // initialize LED digital pin as an output.'
-  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(D1, INPUT_PULLUP);
+  Serial.begin(9600);
+  Serial.println();
+  WiFi.begin(ssid.c_str(), password.c_str());
+
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("done.");
 }
 
 void loop()
 {
-  // turn the LED on (HIGH is the voltage level)
+                                                //  http.begin(client, "http://www.geekstips.com/esp8266-arduino-tutorial-iot-code-example/"); // 30KB payload
+  bool newState = !digitalRead(D1);
   
-  bool turnOn = digitalRead(D1);
+  if(oldState != newState){
+    oldState = newState;
+    const string pathVariable = newState == OPEN ? OPEN_STR : CLOSE_STR; 
+    http.begin(client, ("http://arcane-dawn-45409.herokuapp.com" + pathVariable).c_str()); // <1KB payload
+    int httpCode = http.POST("");
+    String payload = http.getString(); // Get the response payload
+    Serial.println(httpCode); // Print HTTP return code
+    Serial.println(payload);  // Print request response payload
 
-  if(turnOn){
-    digitalWrite(LED_BUILTIN, HIGH);
-  } else 
-  {
-    digitalWrite(LED_BUILTIN, LOW);
+    http.end(); // Close connection
+
+    Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
   }
-  
-  // wait for a second
-  delay(1000);
+
+  delay(200);
 }
