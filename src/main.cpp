@@ -5,10 +5,13 @@
  */
 
 #include "Arduino.h"
+#include "Constants.h"
+
+const String ssid = "";
 
 void setup()
 {
-  // initialize LED digital pin as an output.
+  // initialize LED digital pin as an output.'
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(D1, INPUT_PULLUP);
 }
